@@ -6,8 +6,7 @@
 ; duple: number X -> (listof X)
 ; Purpose: returns a list containing n copies of x
 (define (duple n x)
-  (cond [(equal? n 1) (list x)]
-        [else (cons x (duple (- n 1) x))]))
+  (if (equal? n 1) (list x) (cons x (duple (- n 1) x))))
 
 (check-expect (duple 2 3) '(3 3))
 (check-expect (duple 3 "s") '("s" "s" "s"))
@@ -15,16 +14,18 @@
 ; ex 1.16
 ; invert: (listof (listof symbol)) -> (listof (listof symbol))
 ; Purpose: to invert the list of 2-lists and return a list with each 2-list reversed
-(define (invert lst)
-  (map reverse lst))
+(define (invert los)
+  (if (null? los) '()
+      (cons (list (cadr (car los)) (car (car los))) (invert (cdr los)))))
 
 (check-expect (invert '((a 1) (a 2) (1 b) (2 b))) '((1 a) (2 a) (b 1) (b 2)))
+
 
 ; ex 1.17
 ; down: (listof X) -> (listof X)
 ; Purpose: wraps parentheses around each top-level element of lst 
 (define (downn lst)
-  (map (lambda (x) (list x)) lst))
+  (if (null? lst) '() (cons (list (car lst)) (downn (cdr lst)))))
 
 (check-expect (downn '(1 2 3)) '((1) (2) (3)))
 (check-expect (downn '((a) (fine) (idea))) '(((a)) ((fine)) ((idea))))
@@ -290,15 +291,15 @@
 ; path: integer bst -> (listof symbol)
 ; Purpose: Find the path to n in the given bst
 (define (path n bst)
-  (local [; helper: n bst (listof symbol) -> (listof symbol)
-          ; Purpose:
-          ; ACCUM-INV: accumulated "turns" so far in path
-          (define (helper n bst accum)
-            (cond [(= n (car bst)) (reverse accum)]
-                  [(< n (car bst)) (helper n (cadr bst) (cons 'left accum))]
-                  [else (helper n (caddr bst) (cons 'right accum))]))
-          ]
-    (helper n bst '())))
+  ; helper: n bst (listof symbol) -> (listof symbol)
+  ; Purpose:
+  ; ACCUM-INV: accumulated "turns" so far in path
+  (define (helper n bst accum)
+    (cond [(= n (car bst)) (reverse accum)]
+          [(< n (car bst)) (helper n (cadr bst) (cons 'left accum))]
+          [else (helper n (caddr bst) (cons 'right accum))]))
+          
+  (helper n bst '()))
 
 (check-expect (path 17 BST1) '(right left left)) 
 
@@ -306,16 +307,16 @@
 ; number-leaves: bt -> bt
 ; Purpose: count the leaves 
 (define (number-leaves bt)
-  (local [; helper: bt number -> bt
-          ; Purpose:
-          ; ACCUM-INV: accumulated number of leaves 
-          (define (helper bt accum)
-            (cond [(leaf? bt) (cons (leaf accum) (+ 1 accum))]
-                  [else (cons (interior-node (contents-of bt)
-                                               (car (helper (lson bt) accum))
-                                               (list (car (helper (rson bt) (cdr (helper (lson bt) accum))))))
-                                (cdr (helper (rson bt) (cdr (helper (lson bt) accum)))))]))]
-    (car (helper bt 0))))
+  ; helper: bt number -> bt
+  ; Purpose:
+  ; ACCUM-INV: accumulated number of leaves 
+  (define (helper bt accum)
+    (cond [(leaf? bt) (cons (leaf accum) (+ 1 accum))]
+          [else (cons (interior-node (contents-of bt)
+                                     (car (helper (lson bt) accum))
+                                     (list (car (helper (rson bt) (cdr (helper (lson bt) accum))))))
+                      (cdr (helper (rson bt) (cdr (helper (lson bt) accum)))))]))
+  (car (helper bt 0)))
 
 (define BT-TEST2 (interior-node 'foo
                                 (interior-node 'bar

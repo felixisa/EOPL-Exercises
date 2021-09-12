@@ -35,14 +35,27 @@
 ; swapper: symbol symbol slist -> slist
 ; Purpose: to replace all occurences of s1 with s2 and s2 with s1 in the given list
 (define (swapper s1 s2 slist)
-  (map (lambda (x)
-         (cond [(equal? x s1) s2]
-               [(equal? x s2) s1]
-               [else x])) slist))
+  
+  (define (subst-new-exp s1 s2 sexp)
+    (if (symbol? sexp)
+        (if (eqv? s1 sexp)
+            s2
+            (if (eqv? s2 sexp)
+                s1
+                sexp))
+        (swapper s1 s2 sexp)))
+  
+  (if (null? slist)
+      '()
+      (cons (subst-new-exp s1 s2 (car slist))
+            (swapper s1 s2 (cdr slist)))))
+            
 
 (check-expect (swapper 'a 'b '(a b c d)) '(b a c d))
-(check-expect (swapper '(a b) 'b '(c (a b) d c d)) '(c b d c d))
+(check-expect (swapper '(a b) 'b '(c (a b) d c d)) '(c (a (a b)) d c d))
 (check-expect (swapper 'a '(b c) '(a a a a)) '((b c) (b c) (b c) (b c)))
+(check-expect (swapper 'x 'y '((x) y (z (x)))) '((y) x (z (y))))
+
 
 ; ex 1.19
 ; list-set: (listof X) number X -> (listof X)

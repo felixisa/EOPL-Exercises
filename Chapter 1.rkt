@@ -240,7 +240,7 @@
 
 ; lson, rson
 (define lson cadr)
-(define rson cddr)
+(define rson caddr)
 
 ; contents-of
 (define (contents-of bt)
@@ -308,9 +308,10 @@
   ; Purpose:
   ; ACCUM-INV: accumulated "turns" so far in path
   (define (helper n bst accum)
-    (cond [(= n (car bst)) (reverse accum)]
-          [(< n (car bst)) (helper n (cadr bst) (cons 'left accum))]
-          [else (helper n (caddr bst) (cons 'right accum))]))
+    (cond [(= n (car bst)) (reverse accum)] ; if the root of the BST is n, return path
+          [(< n (car bst)) ; if n is less than the root, 
+           (helper n (cadr bst) (cons 'left accum))] ; traverse the left branch and add a left turn to accum
+          [else (helper n (caddr bst) (cons 'right accum))])) ; otherwise, traverse right branch and add a right turn
           
   (helper n bst '()))
 
@@ -319,13 +320,14 @@
 ; ex. 1.35
 ; number-leaves: bt -> bt
 ; Purpose: count the leaves 
-(define (number-leaves bt)
-  ; helper: bt number -> bt
+#;(define (number-leaves bt)
+  ; helper: bt bt -> bt
   ; Purpose:
-  ; ACCUM-INV: accumulated number of leaves 
+  ; ACCUM-INV: new bt with leaves marked
   (define (helper bt accum)
-    (cond [(leaf? bt) (cons (leaf accum) (+ 1 accum))]
-          [else (cons (interior-node (contents-of bt)
+    (cond [(leaf? bt) ; if bt is just a leaf
+           (cons (leaf accum) (+ 1 accum))] 
+          [else (cons (interior-node (contents-of bt) ; original root
                                      (car (helper (lson bt) accum))
                                      (list (car (helper (rson bt) (cdr (helper (lson bt) accum))))))
                       (cdr (helper (rson bt) (cdr (helper (lson bt) accum)))))]))
@@ -341,7 +343,7 @@
                                                               (leaf 117)
                                                               (leaf 14))))) 
 
-(check-expect (number-leaves BT-TEST2) '(foo
+#;(check-expect (number-leaves BT-TEST2) '(foo
                                          (bar 0 1)
                                          (baz
                                           2
